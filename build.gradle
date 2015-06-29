@@ -1,0 +1,10 @@
+apply plugin: 'java'
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+
+	compile 'org.eclipse.jetty:jetty-server:9.3.0.v20150612'
+}
