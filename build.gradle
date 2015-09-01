@@ -6,5 +6,8 @@ repositories {
 
 dependencies {
 
+	compile 'org.eclipse.jetty:jetty-client:9.3.0.v20150612'
 	compile 'org.eclipse.jetty:jetty-server:9.3.0.v20150612'
+	compile 'org.xerial:sqlite-jdbc:3.7.2'
+	
 }

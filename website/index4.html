@@ -1,0 +1,164 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Vector Icon Example</title>
+<script src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ol3/3.7.0/ol.css" type="text/css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ol3/3.7.0/ol.js"></script>
+
+<style>
+#map {
+  position: relative;
+}
+#popup {
+  padding-bottom: 45px;
+}
+</style>
+</head>
+
+<script>
+
+	var last_lat;
+	var last_lon;
+
+
+function arrowPointer(){
+	
+	
+	var xmlhttp = new XMLHttpRequest();
+	var url = "http://localhost/last";
+
+	xmlhttp.open("GET", url, true);
+	xmlhttp.send();
+
+	xmlhttp.onreadystatechange = function() {
+	    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+	        var responseArray = JSON.parse(xmlhttp.responseText);
+	        alert("xmlhttp.responseText: " + xmlhttp.responseText);
+	       handler(responseArray);
+	    }
+	}
+
+	
+	 
+// Konvertierung von last_lat="0815" zu llat=0815 funktioniert nicht, auch nicht var llat = JSON.parse(last_lat);
+// Das Ikon wandert nicht, wenn coordinates sich ändert!!!
+ 
+var llat = 90; 
+var llon = 90;
+
+var coordinates = [llat,llon];
+
+	
+	
+var iconFeature = new ol.Feature({
+  geometry: new ol.geom.Point(coordinates),
+  name: 'llat: '+llat+' llon: '+llon,
+  population: 4000,
+  rainfall: 500
+});
+
+
+var iconStyle = new ol.style.Style({
+  image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({ 
+    anchor: [0.5, 22],
+    anchorXUnits: 'fraction',
+    anchorYUnits: 'pixels',
+    opacity: 0.75,
+    src: 'website/icon.png'
+  }))
+});
+
+iconFeature.setStyle(iconStyle);
+
+var vectorSource = new ol.source.Vector({
+  features: [iconFeature]
+});
+
+var vectorLayer = new ol.layer.Vector({
+  source: vectorSource
+});
+
+var rasterLayer = new ol.layer.Tile({
+  source: new ol.source.TileJSON({
+    url: 'http://api.tiles.mapbox.com/v3/mapbox.geography-class.jsonp',
+    crossOrigin: ''
+  })
+});
+
+var map = new ol.Map({
+  layers: [rasterLayer, vectorLayer],
+  target: document.getElementById('map'),
+  view: new ol.View({
+    center: [0, 0],
+    zoom: 3
+  })
+});
+
+var element = document.getElementById('popup');
+
+var popup = new ol.Overlay({
+  element: element,
+  positioning: 'bottom-center',
+  stopEvent: false
+});
+map.addOverlay(popup);
+
+// display popup on click
+map.on('click', function(evt) {
+  var feature = map.forEachFeatureAtPixel(evt.pixel,
+      function(feature, layer) {
+        return feature;
+      });
+  if (feature) {
+    var geometry = feature.getGeometry();
+    var coord = geometry.getCoordinates();
+    popup.setPosition(coord);
+    $(element).popover({
+      'placement': 'top',
+      'html': true,
+      'content': feature.get('name')
+    });
+    $(element).popover('show');
+  } else {
+    $(element).popover('destroy');
+  }
+});
+
+// change mouse cursor when over marker
+map.on('pointermove', function(e) {
+  if (e.dragging) {
+    $(element).popover('destroy');
+    return;
+  }
+  var pixel = map.getEventPixel(e.originalEvent);
+  var hit = map.hasFeatureAtPixel(pixel);
+  map.getTarget().style.cursor = hit ? 'pointer' : '';
+});
+
+}
+
+function handler (arr) {
+	last_lat = arr.Position[0].X;
+	last_lon = arr.Position[0].Y;
+  //tmstmp = arr.Position[0].T; -> ServerSide anpassen!
+	  alert(last_lat);
+}
+</script>
+
+<body onload="arrowPointer();" > 
+
+<div class="container-fluid">
+
+<div class="row-fluid">
+  <div class="span12">
+    <div id="map" class="map"><div id="popup"></div></div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

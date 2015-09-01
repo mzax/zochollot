@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="de" lang="de-de">
+<head>
+<title>Map | Testanwendung</title>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<meta http-equiv="content-script-type" content="text/javascript" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-language" content="de" />
+<meta name="author" content="Thomas Heiles" />
+<link rel="stylesheet" type="text/css" href="website/map.css"></link>
+<!--[if IE]>
+<link rel="stylesheet" type="text/css" href="website/ie_map.css"></link>
+<![endif]-->
+<script type="text/javascript" src="http://www.openlayers.org/api/OpenLayers.js"></script>
+<script type="text/javascript" src="http://www.openstreetmap.org/openlayers/OpenStreetMap.js"></script>
+<script type="text/javascript" src="website/tom.js"></script>
+<script type="text/javascript" src="XMLHttpRequest.js"></script>
+
+ 
+<script type="text/javascript">
+//<![CDATA[
+
+var map;
+var layer_mapnik;
+var layer_tah;
+var layer_markers;
+
+var last_lat;
+var last_lon;
+
+function drawmap() {
+    // Popup und Popuptext mit evtl. Grafik
+    var popuptext="<font color=\"black\"><b>Fahrrad<br>Stra&szlig;e 123<br>Datum Uhrzeit</b><p><img src=\"website/test.jpg\" width=\"180\" height=\"113\"></p></font>";
+
+    OpenLayers.Lang.setCode('de');
+    
+    // Position und Zoomstufe der Karte
+    var lon = 6.641389; //to do
+    var lat = 49.756667; //to do
+    var zoom = 7; //to do
+
+    map = new OpenLayers.Map('map', {
+        projection: new OpenLayers.Projection("EPSG:900913"),
+        displayProjection: new OpenLayers.Projection("EPSG:4326"),
+        controls: [
+            new OpenLayers.Control.Navigation(),
+            new OpenLayers.Control.LayerSwitcher(),
+            new OpenLayers.Control.PanZoomBar()],
+        maxExtent:
+            new OpenLayers.Bounds(-20037508.34,-20037508.34,
+                                    20037508.34, 20037508.34),
+        numZoomLevels: 18,
+        maxResolution: 156543,
+        units: 'meters'
+    });
+
+    layer_mapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
+    layer_markers = new OpenLayers.Layer.Markers("Address", { projection: new OpenLayers.Projection("EPSG:4326"), 
+    	                                          visibility: true, displayInLayerSwitcher: false });
+    
+
+    map.addLayers([layer_mapnik, layer_markers]);
+    //jumpTo(lon, lat, zoom);
+ 
+    // Position des Markers
+   // addMarker(layer_markers, 6.641389, 49.756667, popuptext);
+	// Initialisierung des Markers durch Datenbankabfrage
+	 	
+	
+		
+	//
+	var request = OpenLayers.Request.GET({
+    url: "http://localhost/last",
+    callback: handler
+	});
+	
+
+function handler(request) {
+
+	
+	//alert("request.responseText: "+ request.responseText);
+	var obj = JSON.parse(request.responseText);
+	last_lat =obj.Position[0].X;
+	last_lon = obj.Position[0].Y;
+	//alert(last_lat);
+	//alert(last_lon);
+	
+	//addMarker(layer_markers, last_lon, last_lat, popuptext);
+    // JSON->JavaScriptObject: http://www.w3schools.com/js/js_json.asp
+    
+	var lonLat = new OpenLayers.LonLat( last_lon ,last_lat )
+    .transform(
+      new OpenLayers.Projection("EPSG:4326"), // Transformation aus dem Koordinatensystem WGS 1984
+      map.getProjectionObject() // in das Koordinatensystem 'Spherical Mercator Projection'
+    );
+	layer_markers.addMarker(new OpenLayers.Marker(lonLat));
+	
+	map.setCenter(lonLat, zoom);
+
+}
+
+
+
+}
+
+//]]>
+    </script>
+
+  </head>
+  <body onload="drawmap();">
+
+  <div id="header">
+   <div id="content">Karte (Testversion)</div>
+   <div id="osm">© <a href="http://www.openstreetmap.org">OpenStreetMap</a>
+     und <a href="http://www.openstreetmap.org/copyright">Mitwirkende</a>,
+     <a href="http://creativecommons.org/licenses/by-sa/2.0/deed.de">CC-BY-SA</a>
+   </div>
+  </div>
+  <div id="map">
+  </div>
+  
+</body>
+</html>
